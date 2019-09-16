@@ -3,6 +3,7 @@ package lfs
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -16,7 +17,15 @@ import (
 
 func (f *GitFilter) SmudgeToFile(filename string, ptr *Pointer, download bool, manifest *tq.Manifest, cb tools.CopyCallback) error {
 	tools.MkdirAll(filepath.Dir(filename), f.cfg)
-
+	if stat, _ := os.Lstat(filename); stat != nil && stat.Mode()&os.ModeSymlink != 0 {
+		defer func() {
+			println("Replacing " + filename)
+			data, _ := ioutil.ReadFile(filename)
+			_ = os.Remove(filename)
+			_ = os.Symlink(string(data), filename)
+		}()
+		_ = os.Remove(filename)
+	}
 	if stat, _ := os.Stat(filename); stat != nil && stat.Mode()&0200 == 0 {
 		if err := os.Chmod(filename, stat.Mode()|0200); err != nil {
 			return errors.Wrap(err,
