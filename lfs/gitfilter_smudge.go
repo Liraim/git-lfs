@@ -19,7 +19,6 @@ func (f *GitFilter) SmudgeToFile(filename string, ptr *Pointer, download bool, m
 	tools.MkdirAll(filepath.Dir(filename), f.cfg)
 	if stat, _ := os.Lstat(filename); stat != nil && stat.Mode()&os.ModeSymlink != 0 {
 		defer func() {
-			println("Replacing " + filename)
 			data, _ := ioutil.ReadFile(filename)
 			_ = os.Remove(filename)
 			_ = os.Symlink(string(data), filename)
